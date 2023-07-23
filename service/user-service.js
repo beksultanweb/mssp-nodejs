@@ -9,7 +9,7 @@ const ApiError = require('../exceptions/api-error')
 const tokenModel = require('../models/token-model')
 
 class UserService {
-    async registration(email, password, firsName, secondName) {
+    async registration(email, password, firstName, secondName) {
         if(!email || !password) throw ApiError.BadRequest('Email и пароль обязательны для заполнения')
         const candidate = await UserModel.findOne({email})
         if(candidate) {
@@ -18,7 +18,7 @@ class UserService {
         const hashPassword = await bcrypt.hash(password, 3)
         const activationLink = uuid.v4()
 
-        const user = await UserModel.create({email, password: hashPassword, roles: { "User": 2001 }, firsName, secondName, activationLink})
+        const user = await UserModel.create({email, password: hashPassword, roles: { "User": 2001 }, firstName, secondName, activationLink})
         await sendActivationMail(email, `${process.env.CLIENT_URL}/api/activate/${activationLink}`)
 
         const userDto = new UserDto(user)
@@ -40,37 +40,38 @@ class UserService {
         await user.save()
     }
 
-    // async resetpassword(email) {
-    //     const user = await UserModel.findOne({ email: email })
-    //     if (!user) throw ApiError.BadRequest("user with given email doesn't exist")
-    //     const token = await tokenModel.findOne({user: user._id})
-    //     if (!token) {
-    //         const userDto = new UserDto(user)
-    //         tokens = tokenService.generateTokens({...userDto})
-    //         await tokenService.saveToken(userDto.id, tokens.refreshToken)
-    //         return {
-    //             ...tokens,
-    //             user: userDto
-    //         }
-    //     }
-    //     const link = `${process.env.CLIENT_URL}/password-reset/${user._id}/${token.refreshToken}`
-    //     await sendResetPassEmail(user.email, "Password reset", link)
-    // }
+    async resetpassword(email) {
+        const user = await UserModel.findOne({ email: email })
+        if (!user) throw ApiError.BadRequest("user with given email doesn't exist")
+        const token = await tokenModel.findOne({user: user._id})
+        if (!token) {
+            const userDto = new UserDto(user)
+            tokens = tokenService.generateTokens({...userDto})
+            await tokenService.saveToken(userDto.id, tokens.refreshToken)
+            return {
+                ...tokens,
+                user: userDto
+            }
+        }
+        const link = `${process.env.CLIENT_URL}/password-reset/${user._id}/${token.refreshToken}`
+        console.log(link)
+        await sendResetPassEmail(user.email, link)
+    }
 
-    // async setnewpassword(userId, password, refreshToken) {
-    //     const user = await UserModel.findById(userId)
-    //     if (!user) throw ApiError.BadRequest("invalid link or expired")
+    async setnewpassword(userId, password, refreshToken) {
+        const user = await UserModel.findById(userId)
+        if (!user) throw ApiError.BadRequest("invalid link or expired")
 
-    //     const token = await tokenService.findOne({
-    //         user: user._id,
-    //         refreshToken: refreshToken,
-    //     });
-    //     if (!token) throw ApiError.BadRequest("invalid link or expired")
+        const token = await tokenService.findOne({
+            user: user._id,
+            refreshToken: refreshToken,
+        });
+        if (!token) throw ApiError.BadRequest("invalid link or expired")
 
-    //     user.password = password
-    //     await user.save()
-    //     await token.delete();
-    // }
+        user.password = password
+        await user.save()
+        await token.delete();
+    }
 
     async login(email, password) {
         const user = await UserModel.findOne({email})

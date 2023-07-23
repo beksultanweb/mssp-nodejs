@@ -56,22 +56,25 @@ const sendActivationMail = async (to, link) => {
     })
 }
 
-// const sendResetPassEmail = async (to, link) => {
-//     let emailTransporter = await createTransporter()
-//     await emailTransporter.sendMail({
-//         from: process.env.SMTP_USER,
-//         to,
-//         subject: 'Сброс пароля ' + process.env.API_URL,
-//         text: '',
-//         html:
-//         `
-//         <div>
-//             <h1>Для сброса пароля аккаунта перейдите по ссылке</h1>
-//             <a href="${link}">${link}</a>
-//         </div>
-//         `
-//     })
-// }
+const sendResetPassEmail = async (to, link) => {
+    let emailTransporter = await createTransporter()
+    await emailTransporter.sendMail({
+        from: process.env.SMTP_USER,
+        to,
+        subject: 'Сброс пароля ' + process.env.API_URL,
+        text: '',
+        html:
+        `
+        <div>
+            <h1>Для сброса пароля аккаунта перейдите по ссылке:</h1>
+            <a href="${link}">${link}</a>
+        </div>
+        `
+    })
+}
 
 
-module.exports = sendActivationMail
+module.exports = {
+    sendActivationMail,
+    sendResetPassEmail
+}

@@ -9,8 +9,8 @@ class UserController {
             if(!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Ошибка при валидации', errors.array()))
             }
-            const {email, password, firsName, secondName} = req.body
-            const userData = await userService.registration(email, password, firsName, secondName)
+            const {email, password, firstName, secondName} = req.body
+            const userData = await userService.registration(email, password, firstName, secondName)
             res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
             return res.json(userData)
         } catch (error) {
@@ -50,23 +50,23 @@ class UserController {
         }
     }
 
-    // async resetpassword(req, res, next) {
-    //     try {
-    //         await userService.resetpassword(req.body.email)
-    //         res.send("password reset link sent to your email account")
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
-    
-    // async setnewpassword(req, res, next) {
-    //     try {
-    //         await userService.setnewpassword(req.params.userId, req.body.password, req.params.token)
-    //         res.send("password reset sucessfully")
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
+    async resetpassword(req, res, next) {
+        try {
+            await userService.resetpassword(req.body.email)
+            return res.send("password reset link sent to your email account")
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async setnewpassword(req, res, next) {
+        try {
+            await userService.setnewpassword(req.params.userId, req.body.password, req.params.token)
+            res.send("password reset sucessfully")
+        } catch (error) {
+            next(error)
+        }
+    }
 
     async refresh(req, res, next) {
         try {

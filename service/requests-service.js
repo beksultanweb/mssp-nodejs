@@ -4,9 +4,15 @@ const UserModel = require('../models/user-model')
 const path = require('path')
 
 class RequestService {
-    async getMyRequests(userId) {
-        const requests = await RequestModel.find({user: userId})
-        return requests
+    async getMyRequests(userId, status) {
+        if(status !== '') {
+            const requests = await RequestModel.find({user: userId, status: status})
+            return requests
+        }
+        else {
+            const requests = await RequestModel.find({user: userId})
+            return requests
+        }
     }
     async getAllRequests() {
         const requests = await RequestModel.find()
@@ -19,7 +25,7 @@ class RequestService {
     async updateStatus(requestId, status) {
         const filter = { _id: requestId }
         const update = { status: status }
-        const request = await RequestModel.findOneAndUpdate(filter, update)
+        const request = await RequestModel.findOneAndUpdate(filter, update, {returnDocument: 'after'})
         return request
     }
     async uploadFiles(requestId, files) {

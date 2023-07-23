@@ -20,18 +20,21 @@ router.post('/registration',
     userController.registration)
 router.post('/login', userController.login)
 router.post('/logout', userController.logout)
-// router.post('/password-reset', userController.resetpassword)
-// router.post('/password-reset/:userId/:token', userController.setnewpassword)
+router.post('/password-reset', userController.resetpassword)
+router.post('/password-reset/:userId/:token', userController.setnewpassword)
 router.get('/activate/:link', userController.activate)
 router.get('/refresh', userController.refresh)
-router.get('/requests/:userId', verifyRoles(ROLES_LIST.User), requestController.getRequests)
-router.get('/request/:requestId', verifyRoles(ROLES_LIST.User), requestController.getRequest)
-router.get('/download', verifyRoles(ROLES_LIST.User), adminController.download)
+
+// User routes
+router.get('/requests/:userId', verifyRoles(ROLES_LIST.User), authMiddleware, requestController.getRequests)
+router.get('/request/:requestId', verifyRoles(ROLES_LIST.User, ROLES_LIST.Admin), authMiddleware, requestController.getRequest)
+router.get('/download', verifyRoles(ROLES_LIST.User), authMiddleware, adminController.download)
 router.post('/requests', verifyRoles(ROLES_LIST.User), authMiddleware, requestController.createRequest)
 
-router.get('/requests', verifyRoles(ROLES_LIST.Admin), adminController.getAllRequests)
-router.post('/request/:requestId', verifyRoles(ROLES_LIST.Admin), adminController.updateStatus)
-router.post('/upload/:requestId', fileUpload({createParentPath: true}), filePayloadExitst, fileExtLimiter(['.png', '.jpg', '.pdf', '.jpeg']), fileSizeLimiter, verifyRoles(ROLES_LIST.Admin), adminController.uploadFiles)
-router.get('/getuser/:userId', verifyRoles(ROLES_LIST.Admin), adminController.getUser)
+// Admin routes
+router.get('/requests', verifyRoles(ROLES_LIST.Admin), authMiddleware, adminController.getAllRequests)
+router.post('/request/:requestId', verifyRoles(ROLES_LIST.Admin), authMiddleware, adminController.updateStatus)
+router.post('/upload/:requestId', fileUpload({createParentPath: true}), filePayloadExitst, fileExtLimiter(['.png', '.jpg', '.pdf', '.jpeg']), fileSizeLimiter, verifyRoles(ROLES_LIST.Admin), authMiddleware, adminController.uploadFiles)
+router.get('/getuser/:userId', verifyRoles(ROLES_LIST.Admin), authMiddleware, adminController.getUser)
 
 module.exports = router

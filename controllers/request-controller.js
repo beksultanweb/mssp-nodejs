@@ -6,7 +6,8 @@ class RequestsController {
     async getRequests(req, res, next) {
         try {
             const userId = req.params.userId
-            const requests = await requestsService.getMyRequests(userId)
+            const status = req.query.status
+            const requests = await requestsService.getMyRequests(userId, status)
             return res.json(requests)
         } catch (error) {
             next(error)
@@ -23,7 +24,7 @@ class RequestsController {
     }
     async createRequest(req, res, next) {
         try {
-            const { title, domain, phone } = req.body
+            const {title, domain, phone} = req.body
             const userId = req.user.id
             const request = RequestModel.create({user: userId, title: title, domain: domain, date: new Date(), phone: phone, status: "новая", paid: false, reports: []})
             return res.json(request)
