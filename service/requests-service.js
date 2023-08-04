@@ -14,9 +14,15 @@ class RequestService {
             return requests
         }
     }
-    async getAllRequests() {
-        const requests = await RequestModel.find()
-        return requests
+    async getAllRequests(status) {
+        if(status !== '') {
+            const requests = await RequestModel.find({status: status})
+            return requests
+        }
+        else {
+            const requests = await RequestModel.find()
+            return requests
+        }
     }
     async getRequest(requestId) {
         const request = await RequestModel.findById(requestId)

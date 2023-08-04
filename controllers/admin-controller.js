@@ -7,7 +7,8 @@ const path = require('path')
 class AdminController {
     async getAllRequests(req, res, next) {
         try {
-            const requests = await RequestService.getAllRequests()
+            const status = req.query.status
+            const requests = await RequestService.getAllRequests(status)
             return res.json(requests)
         } catch (error) {
             next(error)
