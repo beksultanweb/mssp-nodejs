@@ -1,8 +1,8 @@
 const UserModel = require('../models/user-model')
 const bcrypt = require('bcryptjs')
 const uuid = require('uuid')
-const sendActivationMail = require('./mail-service')
-const sendResetPassEmail = require('./mail-service')
+const { sendActivationMail } = require('./mail-service')
+const { sendResetPassEmail } = require('./mail-service')
 const tokenService = require('./token-service')
 const UserDto = require('../dtos/user-dto')
 const ApiError = require('../exceptions/api-error')
@@ -46,31 +46,30 @@ class UserService {
         const token = await tokenModel.findOne({user: user._id})
         if (!token) {
             const userDto = new UserDto(user)
-            tokens = tokenService.generateTokens({...userDto})
+            const tokens = tokenService.generateTokens({...userDto})
             await tokenService.saveToken(userDto.id, tokens.refreshToken)
             return {
                 ...tokens,
                 user: userDto
             }
         }
-        const link = `${process.env.CLIENT_URL}/password-reset/${user._id}/${token.refreshToken}`
-        console.log(link)
+        const link = `${process.env.CLIENT_URL}/pwdreset/${user._id}/${token.refreshToken}`
+
         await sendResetPassEmail(user.email, link)
     }
 
     async setnewpassword(userId, password, refreshToken) {
         const user = await UserModel.findById(userId)
+
         if (!user) throw ApiError.BadRequest("invalid link or expired")
 
-        const token = await tokenService.findOne({
-            user: user._id,
-            refreshToken: refreshToken,
-        });
-        if (!token) throw ApiError.BadRequest("invalid link or expired")
+        const token = await tokenService.findToken(refreshToken);
 
-        user.password = password
+        if (!token) throw ApiError.BadRequest("invalid link or expired")
+        const hashPassword = await bcrypt.hash(password, 3)
+        user.password = hashPassword
         await user.save()
-        await token.delete();
+        // await tokenService.removeToken(token);
     }
 
     async login(email, password) {

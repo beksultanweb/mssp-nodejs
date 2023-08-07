@@ -53,7 +53,7 @@ class UserController {
     async resetpassword(req, res, next) {
         try {
             await userService.resetpassword(req.body.email)
-            return res.send("password reset link sent to your email account")
+            return res.send("ссылка со сбросом пароля был выслан на эту почту")
         } catch (error) {
             next(error)
         }
@@ -62,7 +62,7 @@ class UserController {
     async setnewpassword(req, res, next) {
         try {
             await userService.setnewpassword(req.params.userId, req.body.password, req.params.token)
-            res.send("password reset sucessfully")
+            res.send("password changed sucessfully")
         } catch (error) {
             next(error)
         }

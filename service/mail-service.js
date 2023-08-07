@@ -1,6 +1,8 @@
 const nodeMailer = require('nodemailer')
 const { google } = require('googleapis')
+const axios = require('axios')
 const OAuth2 = google.auth.OAuth2
+const qs = require('qs');
 
 
 const createTransporter = async () => {
@@ -14,14 +16,21 @@ const createTransporter = async () => {
         refresh_token: process.env.GOOGLE_REFRESH_TOKEN
     })
 
-    const accessToken = await new Promise((resolve, reject) => {
-        oauth2Client.getAccessToken((err, token) => {
-            if(err) {
-                reject()
-            }
-            resolve(token)
-        })
+    const tokenUrl = 'https://oauth2.googleapis.com/token';
+
+    const requestData = {
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+        grant_type: 'refresh_token'
+    };
+
+    const response = await axios.post(tokenUrl, qs.stringify(requestData), {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
     })
+    const accessToken = response.data.access_token;
 
     const transporter = nodeMailer.createTransport({
         service: "gmail",
@@ -57,20 +66,30 @@ const sendActivationMail = async (to, link) => {
 }
 
 const sendResetPassEmail = async (to, link) => {
-    let emailTransporter = await createTransporter()
-    await emailTransporter.sendMail({
-        from: process.env.SMTP_USER,
-        to,
-        subject: 'Сброс пароля ' + process.env.API_URL,
-        text: '',
-        html:
-        `
-        <div>
-            <h1>Для сброса пароля аккаунта перейдите по ссылке:</h1>
-            <a href="${link}">${link}</a>
-        </div>
-        `
-    })
+    console.log(to, link)
+    try {
+        let emailTransporter = await createTransporter();
+        await emailTransporter.sendMail({
+            from: process.env.SMTP_USER,
+            to,
+            subject: 'Сброс пароля ' + process.env.API_URL,
+            text: '',
+            html:
+            `
+            <div>
+                <h1>Для сброса пароля аккаунта перейдите по ссылке:</h1>
+                <a href="${link}">${link}</a>
+            </div>
+            `
+        });
+    } catch (error) {
+        console.error('Error sending password reset email:', error.message);
+        if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', error.response.data);
+            console.error('Response headers:', error.response.headers);
+        }
+    }
 }
 
 
