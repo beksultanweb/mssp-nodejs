@@ -9,7 +9,7 @@ const ApiError = require('../exceptions/api-error')
 const tokenModel = require('../models/token-model')
 
 class UserService {
-    async registration(email, password, firstName, secondName) {
+    async registration(email, password, name) {
         if(!email || !password) throw ApiError.BadRequest('Email и пароль обязательны для заполнения')
         const candidate = await UserModel.findOne({email})
         if(candidate) {
@@ -18,7 +18,7 @@ class UserService {
         const hashPassword = await bcrypt.hash(password, 3)
         const activationLink = uuid.v4()
 
-        const user = await UserModel.create({email, password: hashPassword, roles: { "User": 2001 }, firstName, secondName, activationLink})
+        const user = await UserModel.create({email, password: hashPassword, roles: { "User": 2001 }, name, activationLink})
         await sendActivationMail(email, `${process.env.CLIENT_URL}/api/activate/${activationLink}`)
 
         const userDto = new UserDto(user)
